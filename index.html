@@ -713,6 +713,7 @@
     <img id="cam-preview"
       style="display:none; max-width:90%; max-height:70vh; border:2px solid #fff; border-radius:8px;" />
     <div style="margin-top:20px; display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
+      <button class="tbtn" id="cam-switch" onclick="switchCamera()" style="font-size:15px; padding:10px 20px; background:#8e24aa; color:#fff;">&#128260; Switch</button>
       <button class="tbtn t-add" id="cam-capture" style="font-size:15px; padding:10px 20px;">&#128247; Capture</button>
       <button class="tbtn t-save" id="cam-save" style="display:none; font-size:15px; padding:10px 20px;">&#128190; Save
         & Download</button>
@@ -1237,6 +1238,25 @@ ${buildDoc(id)}
     let capturedDataUrl = null;
     let capturedFileName = null;
     let capturedFolderName = null;
+    let currentFacingMode = 'environment';
+
+    async function startCameraStream() {
+      if (camStream) {
+        camStream.getTracks().forEach(t => t.stop());
+      }
+      try {
+        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+        document.getElementById('cam-video').srcObject = camStream;
+      } catch (e) {
+        alert('Camera access error. Please allow camera permissions. ' + e.message);
+        closeCamera();
+      }
+    }
+
+    function switchCamera() {
+      currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+      startCameraStream();
+    }
 
     async function openCamera(id) {
       const pName = document.querySelector('#doc-' + id + ' [data-f="patName"]').value;
@@ -1252,18 +1272,13 @@ ${buildDoc(id)}
       document.getElementById('cam-video').style.display = 'block';
       document.getElementById('cam-preview').style.display = 'none';
       document.getElementById('cam-capture').style.display = 'inline-flex';
+      document.getElementById('cam-switch').style.display = 'inline-flex';
       document.getElementById('cam-save').style.display = 'none';
       document.getElementById('cam-retake').style.display = 'none';
       document.getElementById('cam-capture').innerHTML = "&#128247; Capture";
       document.getElementById('cam-capture').disabled = false;
 
-      try {
-        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        document.getElementById('cam-video').srcObject = camStream;
-      } catch (e) {
-        alert('Camera access error. Please allow camera permissions. ' + e.message);
-        closeCamera();
-      }
+      await startCameraStream();
     }
 
     function closeCamera() {
@@ -1344,6 +1359,7 @@ ${buildDoc(id)}
         previewImg.style.display = 'block';
 
         btn.style.display = 'none';
+        document.getElementById('cam-switch').style.display = 'none';
         document.getElementById('cam-save').style.display = 'inline-flex';
         document.getElementById('cam-retake').style.display = 'inline-flex';
 
@@ -1364,6 +1380,7 @@ ${buildDoc(id)}
 
       const capBtn = document.getElementById('cam-capture');
       capBtn.style.display = 'inline-flex';
+      document.getElementById('cam-switch').style.display = 'inline-flex';
       capBtn.innerHTML = "&#128247; Capture";
       capBtn.disabled = false;
     });
