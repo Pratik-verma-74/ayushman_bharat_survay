@@ -48,14 +48,17 @@ async function getPdfsDB() {
   });
 }
 
-async function openPdfGallery() {
+async function openPdfGallery(query = '') {
   document.getElementById('pdf-gallery-modal').style.display = 'flex';
   const content = document.getElementById('pdf-gallery-content');
   content.innerHTML = '<p style="text-align:center;">Loading PDF backups...</p>';
   try {
-    const pdfs = await getPdfsDB();
+    let pdfs = await getPdfsDB();
+    if (query) {
+      pdfs = pdfs.filter(p => (p.patientName || '').toLowerCase().includes(query) || (p.fileName || '').toLowerCase().includes(query));
+    }
     if (pdfs.length === 0) {
-      content.innerHTML = '<p style="text-align:center; margin-top:40px; color:#666; font-size:16px;">No PDFs backed up yet.</p>';
+      content.innerHTML = '<p style="text-align:center; margin-top:40px; color:#666; font-size:16px;">No PDFs found.</p>';
       return;
     }
 
@@ -72,7 +75,7 @@ async function openPdfGallery() {
         <div style="background:#b0bec5; padding:12px; font-weight:bold; font-size:15px; cursor:pointer; color:#000;" onclick="togglePdfFolder('${date}')">
           &#128193; ${date} (${groups[date].length} PDFs)
         </div>
-        <div id="pdf-folder-${date}" style="display:none; padding:15px; gap:15px; flex-wrap:wrap; justify-content:center;">`;
+        <div id="pdf-folder-${date}" style="display:${query ? 'flex' : 'none'}; padding:15px; gap:15px; flex-wrap:wrap; justify-content:center;">`;
 
       groups[date].forEach(p => {
         html += `<div style="width:100%; max-width:200px; background:#fafafa; border:1px solid #ccc; border-radius:6px; padding:10px; text-align:center; display:flex; flex-direction:column; justify-content:space-between;">
