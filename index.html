@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
     *,
     *::before,
@@ -103,11 +104,11 @@
       border: 1px solid #f1f5f9;
     }
     
-    /* Make the action card sticky on scroll */
+    /* Make the action card relative so it scrolls out of view */
     .sticky-wrapper {
-      position: sticky;
-      top: 10px;
+      position: relative;
       z-index: 200;
+      margin-bottom: 20px;
     }
 
     .qa-title {
@@ -757,6 +758,7 @@
 
       #app-header,
       .sticky-wrapper,
+      #add-form-container,
       #toast,
       #loader,
       .btn-dl,
@@ -885,6 +887,12 @@
   </div>
   <div id="toast"></div>
   <div id="wrap"></div>
+
+  <div id="add-form-container" style="max-width: 880px; margin: 20px auto 40px auto; padding: 0 10px; display: flex; justify-content: center;">
+    <button onclick="addForm()" style="width: 100%; padding: 15px; background: #fff; border: 2px dashed #3b82f6; border-radius: 12px; color: #3b82f6; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+      <i class="ph-bold ph-plus" style="font-size: 20px;"></i> Add New Form
+    </button>
+  </div>
 
   <!-- Camera Modal -->
   <div id="cam-modal"
