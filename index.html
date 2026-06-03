@@ -1408,10 +1408,10 @@ ${buildDoc(id)}
         const dtString = now.toLocaleString();
         
         const pNameText = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="patName"]').value.trim() || 'N/A';
-        const pIdText = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="caseNo"]').value.trim() || document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim() || 'N/A';
+        const pIdText = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim() || 'N/A';
         
         ctx.font = "bold 18px Arial";
-        ctx.fillText('Patient: ' + pNameText + ' | ID: ' + pIdText, 15, canvas.height - 85);
+        ctx.fillText('Patient: ' + pNameText + ' | Card No: ' + pIdText, 15, canvas.height - 85);
 
         ctx.font = "bold 16px Arial";
         ctx.fillText('Date/Time: ' + dtString, 15, canvas.height - 55);
@@ -1423,7 +1423,7 @@ ${buildDoc(id)}
         // 4. Set Preview
         capturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
         const pName = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="patName"]').value.trim().replace(/\s+/g, '_');
-        const pId = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="caseNo"]').value.trim().replace(/\s+/g, '_') || document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim().replace(/\s+/g, '_') || 'NoID';
+        const pId = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim().replace(/\s+/g, '_') || 'NoCardNo';
         const dStr = now.toISOString().split('T')[0];
         const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
 
@@ -1475,7 +1475,7 @@ ${buildDoc(id)}
       try {
         const hospName = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="hospName"]').value.trim() || 'Hospital';
         const pName = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="patName"]').value.trim() || 'Patient';
-        const pId = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="caseNo"]').value.trim() || document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim() || 'NoID';
+        const pId = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim() || 'NoCardNo';
 
         // We replace / with - for safe filenames
         const cleanPName = pName.split('/').join('-').split('\\').join('-');
