@@ -876,6 +876,7 @@
         <button class="qa-btn" onclick="document.getElementById('importFile').click()"><div class="qa-icon" style="color:#6366f1; background:#e0e7ff;"><i class="ph-fill ph-upload-simple"></i></div>Import</button>
         <button class="qa-btn" onclick="clearAll()"><div class="qa-icon" style="color:#f43f5e; background:#ffe4e6;"><i class="ph-fill ph-trash"></i></div>Clear All</button>
         <button class="qa-btn" onclick="window.print()"><div class="qa-icon" style="color:#475569; background:#f1f5f9;"><i class="ph-fill ph-printer"></i></div>Print</button>
+        <button class="qa-btn" onclick="printAllPdf()"><div class="qa-icon" style="color:#eab308; background:#fef08a;"><i class="ph-fill ph-files"></i></div>Print All</button>
       </div>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importAllData(event)" />
     </div>
@@ -1411,6 +1412,121 @@ ${buildDoc(id)}
         loader.classList.remove('on');
       }
     }
+
+    async function printAllPdf() {
+      const els = document.querySelectorAll('.doc');
+      if (els.length === 0) { toast('No forms available to print'); return; }
+
+      const loader = document.getElementById('loader');
+      loader.classList.add('on');
+      loader.querySelector('p').innerText = 'Generating Combined PDF...';
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pW = 210, pH = 297, mX = 8, mY = 8;
+        const printW = pW - mX * 2;                   
+        const pageH = pH - mY * 2;
+
+        let firstPage = true;
+
+        for (let i = 0; i < els.length; i++) {
+          const docEl = els[i];
+          const prev = docEl.style.cssText;
+          
+          docEl.style.cssText = 'width:760px!important;padding:12px 14px!important;font-size:11px!important;';
+          docEl.classList.add('pdf-mode');
+
+          const inputsWithPlaceholders = docEl.querySelectorAll('input[placeholder]');
+          const originalPlaceholders = [];
+          inputsWithPlaceholders.forEach(inp => {
+            originalPlaceholders.push({ el: inp, val: inp.getAttribute('placeholder') });
+            inp.setAttribute('placeholder', '');
+          });
+
+          const inputs = docEl.querySelectorAll('input, textarea');
+          const replacements = [];
+          inputs.forEach(inp => {
+            if (inp.style.display === 'none' || inp.type === 'hidden') return;
+            const replacement = document.createElement('div');
+            if (inp.type === 'checkbox') {
+              replacement.style.cssText = `display: inline-block; width: 13px; height: 13px; border: 1.2px solid #000; text-align: center; line-height: 11px; font-size: 10px; font-weight: bold; vertical-align: middle; background: #fff;`;
+              replacement.textContent = inp.checked ? '✓' : '';
+            } else {
+              const isTextarea = inp.tagName.toLowerCase() === 'textarea';
+              replacement.style.cssText = `width: 100%; min-height: ${isTextarea ? '32px' : '14px'}; font-size: 10.5px; font-family: Arial, sans-serif; color: #000; text-align: left; padding: 0; margin: 0; white-space: ${isTextarea ? 'pre-wrap' : 'nowrap'}; word-break: break-all; display: inline-block; vertical-align: middle; box-sizing: border-box; line-height: 1.2;`;
+              replacement.textContent = inp.value || '';
+            }
+            replacements.push({ original: inp, replacement: replacement, parent: inp.parentNode });
+            inp.parentNode.insertBefore(replacement, inp);
+            inp.parentNode.removeChild(inp);
+          });
+
+          const cvs = await html2canvas(docEl, {
+            scale: 2.8, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 760, windowWidth: 800, scrollX: 0, scrollY: 0
+          });
+
+          replacements.forEach(item => {
+            item.parent.insertBefore(item.original, item.replacement);
+            item.parent.removeChild(item.replacement);
+          });
+          originalPlaceholders.forEach(item => {
+            item.el.setAttribute('placeholder', item.val);
+          });
+          docEl.style.cssText = prev;
+          docEl.classList.remove('pdf-mode');
+
+          const pxPerMm = cvs.width / printW;
+          const totalH = cvs.height / pxPerMm;
+          
+          let offsetMm = 0;
+          while (offsetMm < totalH) {
+            const sliceMm = Math.min(pageH, totalH - offsetMm);
+            const slicePx = Math.round(sliceMm * pxPerMm);
+            const startPx = Math.round(offsetMm * pxPerMm);
+
+            const tmp = document.createElement('canvas');
+            tmp.width = cvs.width; tmp.height = slicePx;
+            tmp.getContext('2d').drawImage(cvs, 0, startPx, cvs.width, slicePx, 0, 0, cvs.width, slicePx);
+
+            if (!firstPage) pdf.addPage();
+            firstPage = false;
+            
+            pdf.addImage(tmp.toDataURL('image/jpeg', 0.98), 'JPEG', mX, mY, printW, sliceMm);
+            offsetMm += sliceMm;
+          }
+        }
+
+        const dt = new Date().toISOString().split('T')[0];
+        const fileName = 'All_Audits_' + dt + '.pdf';
+
+        try {
+          if (typeof savePdfToBackup === 'function') {
+            const dataUrl = pdf.output('datauristring');
+            await savePdfToBackup({
+              date: dt,
+              patientName: 'Combined Reports',
+              fileName: fileName,
+              dataUrl: dataUrl,
+              timestamp: Date.now()
+            });
+          }
+        } catch (err) {
+          console.warn('Backup save failed', err);
+        }
+
+        pdf.save(fileName);
+        toast('Combined PDF generated & saved ✓');
+
+      } catch (err) {
+        console.error(err);
+        alert('Error generating Combined PDF');
+      } finally {
+        loader.classList.remove('on');
+        loader.querySelector('p').innerText = 'Generating PDF…';
+      }
+    }
+
 
     window.addEventListener('beforeprint', () => {
       document.querySelectorAll('input[placeholder]').forEach(inp => {
