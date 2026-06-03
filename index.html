@@ -229,25 +229,29 @@
       font-size: 13px
     }
 
-    /* ─── TOAST ─── */
+    /* ─── TOAST (Snackbar) ─── */
     #toast {
       position: fixed;
-      bottom: 18px;
+      bottom: 24px;
       left: 50%;
-      transform: translateX(-50%) translateY(70px);
-      background: #263238;
-      color: #fff;
-      padding: 9px 22px;
-      border-radius: 20px;
-      font-size: 12px;
-      transition: transform .28s;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 9998;
       pointer-events: none;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, .3)
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     #toast.show {
-      transform: translateX(-50%) translateY(0)
+      transform: translateX(-50%) translateY(0);
     }
 
     /* ─── WRAPPER ─── */
@@ -991,9 +995,14 @@
 
     let fCount = 0;
 
-    function toast(msg, ms = 2500) {
+    function toast(msg, ms = 2500, type = 'success') {
       const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
+      const cleanMsg = msg.replace(/[✓✔]/g, '').trim();
+      const icon = type === 'success' 
+        ? '<i class="ph-fill ph-check-circle" style="color: #4ade80; font-size: 20px;"></i>' 
+        : '<i class="ph-fill ph-info" style="color: #60a5fa; font-size: 20px;"></i>';
+      t.innerHTML = `${icon}<span>${esc(cleanMsg)}</span>`;
+      t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), ms);
     }
     function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
