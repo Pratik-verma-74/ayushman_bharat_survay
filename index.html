@@ -1399,14 +1399,21 @@ ${buildDoc(id)}
 
         // 3. Draw Watermark
         ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-        const barHeight = 85;
+        const barHeight = 115;
         ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
 
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 18px Arial";
+        
         const now = new Date();
         const dtString = now.toLocaleString();
+        
+        const pNameText = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="patName"]').value.trim() || 'N/A';
+        const pIdText = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="caseNo"]').value.trim() || document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim() || 'N/A';
+        
+        ctx.font = "bold 18px Arial";
+        ctx.fillText('Patient: ' + pNameText + ' | ID: ' + pIdText, 15, canvas.height - 85);
 
+        ctx.font = "bold 16px Arial";
         ctx.fillText('Date/Time: ' + dtString, 15, canvas.height - 55);
         ctx.font = "16px Arial";
         let locToDraw = locText;
@@ -1416,11 +1423,12 @@ ${buildDoc(id)}
         // 4. Set Preview
         capturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
         const pName = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="patName"]').value.trim().replace(/\s+/g, '_');
+        const pId = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="caseNo"]').value.trim().replace(/\s+/g, '_') || document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim().replace(/\s+/g, '_') || 'NoID';
         const dStr = now.toISOString().split('T')[0];
         const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
 
         capturedFolderName = dStr;
-        capturedFileName = pName + '_' + dStr + '_' + timeStr + '.jpg';
+        capturedFileName = pName + '_' + pId + '_' + dStr + '_' + timeStr + '.jpg';
 
         const previewImg = document.getElementById('cam-preview');
         previewImg.src = capturedDataUrl;
@@ -1467,18 +1475,21 @@ ${buildDoc(id)}
       try {
         const hospName = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="hospName"]').value.trim() || 'Hospital';
         const pName = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="patName"]').value.trim() || 'Patient';
+        const pId = document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="caseNo"]').value.trim() || document.querySelector('#doc-' + currentFormIdForCam + ' [data-f="cardNo"]').value.trim() || 'NoID';
 
         // We replace / with - for safe filenames
         const cleanPName = pName.split('/').join('-').split('\\').join('-');
         const cleanHosp = hospName.split('/').join('-').split('\\').join('-');
+        const cleanPId = pId.split('/').join('-').split('\\').join('-');
 
-        // File name: PatientName - HospitalName.jpg
-        const fileName = `${cleanPName} - ${cleanHosp}.jpg`;
+        // File name: PatientName_ID - HospitalName.jpg
+        const fileName = `${cleanPName}_${cleanPId} - ${cleanHosp}.jpg`;
 
         // Save to IndexedDB (In-App Gallery)
         const photoObj = {
           date: capturedFolderName,
           patientName: pName,
+          patientId: pId,
           hospitalName: hospName,
           dataUrl: capturedDataUrl,
           timestamp: Date.now(),
@@ -1574,9 +1585,10 @@ ${buildDoc(id)}
         <div id="folder-${date}" style="display:${query ? 'flex' : 'none'}; padding:15px; gap:15px; flex-wrap:wrap; justify-content:center;">`;
 
           groups[date].forEach(p => {
+            const displayId = p.patientId ? ` (${p.patientId})` : '';
             html += `<div style="width:100%; max-width:160px; background:#fafafa; border:1px solid #ccc; border-radius:6px; padding:8px; text-align:center; display:flex; flex-direction:column; justify-content:space-between;">
           <img src="${p.dataUrl}" style="width:100%; height:auto; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.2); cursor:pointer;" onclick="viewPhoto(${p.id})" />
-          <div style="font-size:12px; margin-top:8px; word-wrap:break-word; color:#333; text-align:left;"><b>${p.patientName}</b><br/><span style="color:#666;">${p.hospitalName}</span></div>
+          <div style="font-size:12px; margin-top:8px; word-wrap:break-word; color:#333; text-align:left;"><b>${p.patientName}${displayId}</b><br/><span style="color:#666;">${p.hospitalName}</span></div>
           <button onclick="sharePhoto(${p.id})" style="margin-top:10px; background:#25D366; color:#fff; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; width:100%; display:flex; align-items:center; justify-content:center; gap:5px;"><span style="font-size:16px;">💬</span> Share</button>
         </div>`;
           });
